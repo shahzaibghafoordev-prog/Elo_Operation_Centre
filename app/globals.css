@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --font-space-grotesk: 'Space Grotesk', sans-serif;
+  --font-jetbrains-mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #07090f;
+  color: #e2e8f0;
+  font-family: 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1e2a35; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #2d3f4e; }
+
+/* Selection */
+::selection { background: rgba(0,212,160,0.2); color: #e2e8f0; }
+
+@layer components {
+  .card {
+    @apply bg-[#0d1117] border border-[#1e2a35] rounded-xl;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:border-[rgba(0,212,160,0.2)] hover:shadow-glow-green;
+  }
+  .badge-green {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(0,212,160,0.12)] text-[#00d4a0];
+  }
+  .badge-red {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(255,77,106,0.12)] text-[#ff4d6a];
+  }
+  .badge-amber {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(255,181,71,0.12)] text-[#ffb547];
+  }
+  .badge-blue {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(77,159,255,0.12)] text-[#4d9fff];
+  }
+  .badge-muted {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(113,128,150,0.15)] text-[#718096];
+  }
+  .badge-purple {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[rgba(139,92,246,0.12)] text-[#8b5cf6];
+  }
+  .section-title {
+    @apply text-[10px] font-bold tracking-[0.14em] uppercase text-[#718096];
+  }
+  .mono {
+    @apply font-mono text-[11px];
+  }
+  .page-header {
+    @apply flex items-center justify-between mb-6;
+  }
+  .page-title {
+    @apply text-xl font-bold text-[#e2e8f0];
+  }
+  .page-subtitle {
+    @apply text-sm text-[#718096] mt-0.5;
+  }
+  .table-wrap {
+    @apply card overflow-hidden;
+  }
+  .table-head {
+    @apply flex items-center justify-between px-4 py-3 border-b border-[#1e2a35];
+  }
+  .th {
+    @apply text-[9px] font-bold tracking-[0.1em] uppercase text-[#4a5568] text-left whitespace-nowrap;
+  }
+  .td {
+    @apply py-2.5 px-4 text-[12px] text-[#a0aec0] border-b border-[#1e2a35]/50;
+  }
+  .td:last-child { @apply border-b-0; }
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+  }
+  .empty-icon { @apply text-4xl mb-3; }
+  .empty-title { @apply text-sm font-semibold text-[#4a5568] mb-1; }
+  .empty-sub { @apply text-xs text-[#2d3f4e]; }
+  .btn-primary {
+    @apply flex items-center gap-2 px-4 py-2 bg-[#00d4a0] text-black font-bold text-sm rounded-lg
+           transition-opacity hover:opacity-85 active:opacity-70;
+  }
+  .btn-ghost {
+    @apply flex items-center gap-2 px-3 py-1.5 bg-transparent border border-[#1e2a35] text-[#718096]
+           font-semibold text-xs rounded-lg transition-all hover:border-[#00d4a0] hover:text-[#00d4a0];
+  }
+}
