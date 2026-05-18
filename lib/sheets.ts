@@ -174,3 +174,19 @@ export async function loadRefundQueue() {
     .then(rows => rows.slice(1).map(toRefundQ))
     .catch(() => [] as RefundQueue[])
 }
+
+export async function loadRefundStatusQueue() {
+  return getRange(S1, 'Refund Status Queue!A:I')
+    .then(rows => rows.slice(1).map(r => ({
+      rowNumber:   r[0]||'',
+      phone:       r[1]||'',
+      startedAt:   r[2]||'',
+      orderNumber: r[3]||'',
+      reason:      r[4]||'',
+      condition:   r[5]||'',
+      status:      r[6]||'',
+      step:        r[7]||'',
+      completedAt: r[8]||'',
+    })))
+    .catch(() => [] as import('@/types').RefundStatusQueue[])
+}

@@ -157,3 +157,16 @@ export interface SheetData {
   refundQueue: RefundQueue[]
   tgTabCount: number
 }
+
+// ─── Refund Status Queue ─────────────────────────────────────────────────────
+export interface RefundStatusQueue {
+  rowNumber: string
+  phone: string
+  startedAt: string
+  orderNumber: string
+  reason: string
+  condition: string
+  status: string
+  step: string
+  completedAt: string
+}
