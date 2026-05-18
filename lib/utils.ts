@@ -7,15 +7,42 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // ─── Date parsing ─────────────────────────────────────────────────────────────
+// Handles formats like:
+//   "18/05/2026, 2:25:53 am"  ← Google Sheets Pakistan locale
+//   "2026-05-18T02:25:53"
+//   "18/05/2026"
 export function parseDate(s: string): Date | null {
   if (!s) return null
+
+  // Already a valid ISO date
   let d = new Date(s)
   if (!isNaN(d.getTime())) return d
-  const m = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})([\s,T](\d{2}:\d{2}(:\d{2})?))?/)
-  if (m) {
-    d = new Date(`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}${m[5] ? ' '+m[5] : ''}`)
+
+  // Handle "DD/MM/YYYY, H:MM:SS am/pm" (Google Sheets Pakistan format)
+  const ampm = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?/i)
+  if (ampm) {
+    let hours = parseInt(ampm[4])
+    const mins = parseInt(ampm[5])
+    const secs = parseInt(ampm[6] || '0')
+    const meridiem = (ampm[7] || '').toLowerCase()
+    if (meridiem === 'pm' && hours < 12) hours += 12
+    if (meridiem === 'am' && hours === 12) hours = 0
+    d = new Date(
+      parseInt(ampm[3]),   // year
+      parseInt(ampm[2]) - 1, // month (0-indexed)
+      parseInt(ampm[1]),   // day
+      hours, mins, secs
+    )
     if (!isNaN(d.getTime())) return d
   }
+
+  // Handle "DD/MM/YYYY" date only
+  const dateOnly = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/)
+  if (dateOnly) {
+    d = new Date(parseInt(dateOnly[3]), parseInt(dateOnly[2]) - 1, parseInt(dateOnly[1]))
+    if (!isNaN(d.getTime())) return d
+  }
+
   return null
 }
 
@@ -46,7 +73,10 @@ export function isThisMonth(s: string): boolean {
 export function fmtTs(s: string): string {
   const d = parseDate(s)
   if (!d) return s || '—'
-  return d.toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })
+  return d.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short',
+    hour: '2-digit', minute: '2-digit', hour12: true
+  })
 }
 
 export function fmtDate(s: string): string {
@@ -71,22 +101,18 @@ export function timeAgo(s: string): string {
 export function calcStats(data: SheetData): OverviewStats {
   const { messages, escalated, security, dispatch, prequal, cod, orderQueue, refundQueue } = data
 
-  const msgToday = messages.filter(m => isToday(m.ts)).length
-  const escToday = escalated.filter(e => isToday(e.escalatedAt)).length
-  const secToday = security.filter(s => isToday(s.ts)).length
-  const dispToday = dispatch.filter(d => isToday(d.ts)).length
-  const activeEsc = escalated.filter(e => e.status.toLowerCase() === 'active').length
-  const pqActive = prequal.filter(p => p.status.toLowerCase() === 'collecting info').length
+  const msgToday   = messages.filter(m => isToday(m.ts)).length
+  const escToday   = escalated.filter(e => isToday(e.escalatedAt)).length
+  const secToday   = security.filter(s => isToday(s.ts)).length
+  const dispToday  = dispatch.filter(d => isToday(d.ts)).length
+  const activeEsc  = escalated.filter(e => e.status.toLowerCase() === 'active').length
+  const pqActive   = prequal.filter(p => p.status.toLowerCase() === 'collecting info').length
   const codAwaiting = cod.filter(c => c.finalStatus.toLowerCase().includes('awaiting')).length
   const orderActive = orderQueue.filter(o => o.status && !o.status.toLowerCase().includes('done') && !o.status.toLowerCase().includes('resolved')).length
   const refundActive = refundQueue.filter(r => r.status && !r.status.toLowerCase().includes('done') && !r.status.toLowerCase().includes('resolved')).length
 
-  // Bot resolution rate
   const autoReplied = messages.filter(m => m.action.toLowerCase().includes('auto reply')).length
   const botRate = messages.length > 0 ? Math.round((autoReplied / messages.length) * 100) : 0
-
-  // Avg response time (approximate — time between customer messages in same tab)
-  const avgResponseTimeMin = 4 // placeholder — would need timestamps paired
 
   return {
     messagesToday: msgToday,
@@ -100,7 +126,7 @@ export function calcStats(data: SheetData): OverviewStats {
     codAwaiting,
     dispatchedToday: dispToday,
     botResolutionRate: botRate,
-    avgResponseTimeMin,
+    avgResponseTimeMin: 4,
     orderQueueActive: orderActive,
     refundQueueActive: refundActive,
   }
@@ -161,32 +187,16 @@ export function maskPhone(p: string): string {
 }
 
 export const SENTIMENT_COLORS: Record<string, string> = {
-  angry: '#ff4d6a',
-  frustrated: '#ffb547',
-  worried: '#eab308',
-  neutral: '#718096',
-  happy: '#00d4a0',
+  angry: '#ff4d6a', frustrated: '#ffb547', worried: '#eab308', neutral: '#718096', happy: '#00d4a0',
 }
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  'order status': '#00d4a0',
-  'returns and exchange': '#4d9fff',
-  'damaged item': '#ff4d6a',
-  'minor fault': '#ffb547',
-  'sizing and products': '#8b5cf6',
-  'payment and billing': '#ec4899',
-  'cancellation': '#14b8a6',
-  'general': '#f97316',
-  'unclear': '#6b7280',
+  'order status': '#00d4a0', 'returns and exchange': '#4d9fff', 'damaged item': '#ff4d6a',
+  'minor fault': '#ffb547', 'sizing and products': '#8b5cf6', 'payment and billing': '#ec4899',
+  'cancellation': '#14b8a6', 'general': '#f97316', 'unclear': '#6b7280',
 }
 
 export const ACTIVITY_COLORS: Record<ActivityType, string> = {
-  message: '#4d9fff',
-  escalation: '#ff4d6a',
-  cod: '#ffb547',
-  dispatch: '#00d4a0',
-  security: '#ff4d6a',
-  prequal: '#8b5cf6',
-  order: '#f97316',
-  refund: '#ec4899',
+  message: '#4d9fff', escalation: '#ff4d6a', cod: '#ffb547', dispatch: '#00d4a0',
+  security: '#ff4d6a', prequal: '#8b5cf6', order: '#f97316', refund: '#ec4899',
 }
